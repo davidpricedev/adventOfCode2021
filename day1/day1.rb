@@ -1,6 +1,6 @@
 
 def load_ints()
-  lines = File.read('day1Input.txt').strip().split("\n")
+  lines = File.read('input.txt').strip().split("\n")
   return lines.map { |x| Integer(x) }
 end
 
