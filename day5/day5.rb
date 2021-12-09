@@ -3,67 +3,67 @@ def load_data(input_file)
   lines.map { |x| parse_line(x) }
 end
 
+class Point2d
+  attr_reader :x
+  attr_reader :y
+  def initialize(x, y)
+    @x = x
+    @y = y
+  end
+
+  def tostring
+    [x, y].join(",")
+  end
+
+  def self.from_string(point_str)
+    values = point_str.split(",")
+    Point2d.new(Integer(values[0]), Integer(values[1]))
+  end
+end
+
 def parse_line(line)
   coord_pair = line.split(" -> ")
-  [
-    coord_pair[0].split(",").map { |x| Integer(x) },
-    coord_pair[1].split(",").map { |x| Integer(x) }
-  ]
+  [Point2d.from_string(coord_pair[0]), Point2d.from_string(coord_pair[1])]
 end
 
 def filter_part1(coords)
-  coords.filter { |pair| pair[0][0] == pair[1][0] || pair[0][1] == pair[1][1] }
+  coords.filter { |pair| pair[0].x == pair[1].x || pair[0].y == pair[1].y }
 end
 
-def generate_line_points_part1(pair)
-  xs = pair[0][0] < pair[1][0] ? (pair[0][0]..pair[1][0]).to_a : (pair[1][0]..pair[0][0]).to_a
-  ys = pair[0][1] < pair[1][1] ? (pair[0][1]..pair[1][1]).to_a : (pair[1][1]..pair[0][1]).to_a
+def generate_line_points(pair)
+  xs = pair[0].x < pair[1].x ? (pair[0].x..pair[1].x).to_a : (pair[1].x..pair[0].x).to_a
+  ys = pair[0].y < pair[1].y ? (pair[0].y..pair[1].y).to_a : (pair[1].y..pair[0].y).to_a
   length = xs.length > ys.length ? xs.length : ys.length
   if xs.length == 1
-    xs = (1..length).map { |x| xs[0]}
-  else
-    ys = (1..length).map { |x| ys[0] }
-  end
-  xs = pair[0][0] > pair[1][0] ? xs.reverse : xs
-  ys = pair[0][1] > pair[1][1] ? ys.reverse : ys
-  (0..(length - 1)).map { |i| [xs[i], ys[i]] }
-end
-
-def generate_line_points_part2(pair)
-  xs = pair[0][0] < pair[1][0] ? (pair[0][0]..pair[1][0]).to_a : (pair[1][0]..pair[0][0]).to_a
-  ys = pair[0][1] < pair[1][1] ? (pair[0][1]..pair[1][1]).to_a : (pair[1][1]..pair[0][1]).to_a
-  length = xs.length > ys.length ? xs.length : ys.length
-  if xs.length == 1
-    xs = (1..length).map { |x| xs[0]}
+    xs = (1..length).map { |x| xs[0] }
   end
   if ys.length == 1
     ys = (1..length).map { |x| ys[0] }
   end
-  xs = pair[0][0] > pair[1][0] ? xs.reverse : xs
-  ys = pair[0][1] > pair[1][1] ? ys.reverse : ys
-  line_data = (0..(length - 1)).map { |i| [xs[i], ys[i]] }
-  return line_data
+  xs = pair[0].x > pair[1].x ? xs.reverse : xs
+  ys = pair[0].y > pair[1].y ? ys.reverse : ys
+  (0..(length - 1)).map { |i| Point2d.new(xs[i], ys[i]) }
 end
 
 def part1(input)
   data = filter_part1(input)
-  points = data.map { |pair| generate_line_points_part1(pair) }.flatten(1)
-  points_hash = points.reduce(Hash.new) { |state, x| update_hash_part1(state, x) }
+  points = data.flat_map { |pair| generate_line_points(pair) }
+  points_hash = points.reduce({}) { |state, x| update_hash(state, x) }
   points_hash.values.count { |x| x > 1 }
 end
 
-def update_hash_part1(state, point)
-  if state[point.join(",")] == nil
-    state.store(point.join(","), 1)
+def update_hash(state, point)
+  if state[point.tostring].nil?
+    state.store(point.tostring, 1)
   else
-    state[point.join(",")] += 1
+    state[point.tostring] += 1
   end
-  return state
+  state
 end
 
 def part2(input)
-  points = input.map { |pair| generate_line_points_part2(pair) }.flatten(1)
-  points_hash = points.reduce(Hash.new) { |state, x| update_hash_part1(state, x) }
+  points = input.flat_map { |pair| generate_line_points(pair) }
+  points_hash = points.reduce({}) { |state, x| update_hash(state, x) }
   points_hash.values.count { |x| x > 1 }
 end
 
