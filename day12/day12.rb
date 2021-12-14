@@ -50,7 +50,7 @@ class Path
   end
 end
 
-class PathPart2  < Path
+class PathPart2 < Path
   def initialize(path_so_far)
     @path_so_far = path_so_far
     @dupe = nil
@@ -118,9 +118,9 @@ def part2(input)
 end
 
 def main
-  #input_file = "inputSample.txt"
-  #input_file = "inputSample1.txt"
-  #input_file = "inputSample2.txt"
+  # input_file = "inputSample.txt"
+  # input_file = "inputSample1.txt"
+  # input_file = "inputSample2.txt"
   input_file = "input.txt"
 
   print "Part1 Answer: ", part1(load_data(input_file)), "\n"

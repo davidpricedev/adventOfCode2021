@@ -1,4 +1,5 @@
 require "set"
+require "../utils"
 
 def load_data(input_file)
   lines = File.read(input_file).strip.split("\n")
@@ -75,46 +76,6 @@ class Table2d
     [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
       .map { |a, b| [a + x, b + y] }
       .filter { |a, b| a >= 0 && a < width && b >= 0 && b < height }
-  end
-end
-
-class Point2d
-  include Comparable
-  attr_reader :x, :y
-  def initialize(x, y)
-    @x = x
-    @y = y
-  end
-
-  def tostring
-    [x, y].join(",")
-  end
-
-  def self.from_string(point_str)
-    values = point_str.split(",")
-    Point2d.new(Integer(values[0]), Integer(values[1]))
-  end
-
-  def inspect
-    "(#{x}, #{y})"
-  end
-
-  def <=>(other)
-    if other.nil?
-      nil
-    elsif x == other.x && y == other.y
-      0
-    else
-      x <= other.x ? -1 : 1
-    end
-  end
-
-  def eql?(other)
-    x == other.x && y == other.y
-  end
-
-  def hash
-    (x + y).hash
   end
 end
 
