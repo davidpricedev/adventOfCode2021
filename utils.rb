@@ -55,7 +55,7 @@ end
 def visualize_sparse_points(points)
   width = points.map { |p| p.x }.max
   height = points.map { |p| p.y }.max
-  table = (0..(height)).map { |y| (0..(width)).map { |x| "." } }
+  table = (0..height).map { |y| (0..width).map { |x| "." } }
   points.each { |p| table[p.y][p.x] = "#" }
   table = table.map { |row| row.join("") }
   print_array(table)
