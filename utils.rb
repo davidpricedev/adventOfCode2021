@@ -21,7 +21,7 @@ class Point2d
   end
 
   def to_s
-    [x, y].join(",")
+    inspect
   end
 
   def self.from_string(point_str)
