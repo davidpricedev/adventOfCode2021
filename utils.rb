@@ -60,3 +60,32 @@ def visualize_sparse_points(points)
   table = table.map { |row| row.join("") }
   print_array(table)
 end
+
+
+class Table2d
+  def initialize(array2d)
+    @table = array2d
+  end
+
+  def enumerate_indexes(&fn)
+    e = Enumerator.new do |yielder|
+      (0..(@table.length - 1)).each do |x|
+        (0..(@table[0].length - 1)).each { |y| yielder << [x, y] }
+      end
+    end
+
+    return e unless fn
+    e.each(&fn)
+  end
+
+  def get(x, y)
+    if x < 0 || x >= @table.length
+      print "error, tried to access beyond the bounds (x) ", x, " ", y, "\n"
+    end
+    if y < 0 || y >= @table[0].length
+      print "error, tried to access beyond the bounds (y) ", x, " ", y, "\n"
+    end
+
+    @table[x][y]
+  end
+end
