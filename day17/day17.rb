@@ -22,8 +22,8 @@ end
 
 def point_in_zone?(zone, point)
   # y comparisons look funny since zone is negative
-  xa = point.x >= zone.minx && point.x <= zone.maxx &&
-    ya = point.y <= zone.miny && point.y >= zone.maxy
+  point.x >= zone.minx && point.x <= zone.maxx &&
+    point.y <= zone.miny && point.y >= zone.maxy
 end
 
 def step(velocity, position)
