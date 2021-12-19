@@ -148,32 +148,35 @@ end
 
 def explode_at(sfn_tokens, index)
   before = sfn_tokens[0..index - 1]
-  ending = index + sfn_tokens[index..].index("]")
-  pair = sfn_tokens[index + 1..ending - 1]
-  after = sfn_tokens[ending + 1..]
+  left_num = sfn_tokens[index + 1]
+  right_num = sfn_tokens[index + 2]
+  after = sfn_tokens[index + 4..]
 
-  new_before = increment_first_integer(before.reverse, pair[0]).reverse
-  new_after = increment_first_integer(after, pair[1])
+  new_before = increment_last_integer(before, left_num)
+  new_after = increment_first_integer(after, right_num)
   new_before + [0] + new_after
 end
 
-# Increments the first integer found in the array
-def increment_first_integer(array, increment)
-  index = first_number(array)
-  if !index.nil?
-    old_num = Integer(array[index])
-    new_num = increment + old_num
-    array[index] = new_num
+# Increments the last integer found in the array
+def increment_last_integer(array, increment)
+  (array.length - 1).downto(0).each do |i|
+    if array[i].instance_of?(Integer)
+      array[i] = array[i] + increment
+      break
+    end
   end
   array
 end
 
-# Returns the index of the first integer in the array
-def first_number(array)
+# Increments the first integer found in the array
+def increment_first_integer(array, increment)
   array.each_with_index do |x, i|
-    return i if x.instance_of?(Integer)
+    if x.instance_of?(Integer)
+      array[i] = x + increment
+      break
+    end
   end
-  nil
+  array
 end
 
 # apply the reduce rules
