@@ -28,10 +28,6 @@ class Sfn
     Sfn.new(right)
   end
 
-  def is_leaf?
-    left.instance_of?(Integer) && right.instance_of?(Integer)
-  end
-
   def to_s
     left_str = left.instance_of?(Array) ? left_sfn.to_s : left
     right_str = right.instance_of?(Array) ? right_sfn.to_s : right
@@ -42,22 +38,44 @@ class Sfn
     to_s
   end
 
+  def to_token_array
+    new_left = left.instance_of?(Array) ? left_sfn.to_token_array : [left]
+    new_right = right.instance_of?(Array) ? right_sfn.to_token_array : [right]
+    ["["] + new_left + new_right + ["]"]
+  end
+
   def magnitude
     left_value = left.instance_of?(Array) ? left_sfn.magnitude : left
     right_value = right.instance_of?(Array) ? right_sfn.magnitude : right
     left_value * 3 + right_value * 2
   end
 
+  def self.from_token_array(tokens)
+    stack = []
+    tokens.each do |t|
+      case t
+      when "]"
+        b = stack.pop
+        a = stack.pop
+        stack.pop # the starting bracket
+        stack << [a, b]
+      else
+        stack << t
+      end
+    end
+    Sfn.new(stack.pop)
+  end
+
   def self.from_string(sfn_str)
     stack = []
+    sfn_str = sfn_str.delete(",")
     sfn_str.chars.each do |c|
       case c
-      when ",", "["
+      when "["
         stack << c
       when "]"
-        b = get_value_from_stack(stack)
-        stack.pop # the comma
-        a = get_value_from_stack(stack)
+        b = stack.pop
+        a = stack.pop
         stack.pop # the starting bracket
         stack << [a, b]
       else
@@ -65,6 +83,19 @@ class Sfn
       end
     end
     Sfn.new(stack.pop)
+  end
+
+  def add(other)
+    # print "+Adding #{other}", "\n"
+    if other.instance_of?(Array)
+      reduce_sfn(Sfn.new([array, other]))
+    elsif other.instance_of?(String)
+      reduce_sfn(Sfn.new([array, Sfn.from_string(other).array]))
+    elsif other.instance_of?(Sfn)
+      reduce_sfn(Sfn.new([array, other.array]))
+    else
+      print "unknown type: #{other.class}, #{other.instance_of?(String)}, #{other.class.class} \n"
+    end
   end
 
   def split
@@ -82,116 +113,6 @@ class Sfn
       end
     end
   end
-
-  def add(other)
-    # print "+Adding #{other}", "\n"
-    if other.instance_of?(Array)
-      reduce_sfn(Sfn.new([array, other]))
-    elsif other.instance_of?(String)
-      reduce_sfn(Sfn.new([array, Sfn.from_string(other).array]))
-    elsif other.instance_of?(Sfn)
-      reduce_sfn(Sfn.new([array, other.array]))
-    else
-      print "unknown type: #{other.class}, #{other.instance_of?(String)}, #{other.class.class} \n"
-    end
-  end
-
-  def local_explode
-    if left_sfn.is_leaf?
-      new_right = right.instance_of?(Integer) ? left[1] + right : [left[1] + right[0], right[1]]
-      [Sfn.new([0, new_right]), left[0], nil, self]
-    elsif right_sfn.is_leaf?
-      new_left = right[0] + left
-      [Sfn.new([new_left, 0]), nil, right[1], self]
-    end
-  end
-end
-
-def explode(sfn)
-  sfn_str = sfn.to_s
-  depth = 0
-  index = nil
-  sfn_str.chars.each_with_index do |char, i|
-    if char == "["
-      depth += 1
-    elsif char == "]"
-      depth -= 1
-    end
-    if depth == 5
-      index = i
-      break
-    end
-  end
-  if index.nil?
-    [sfn, false]
-  else
-    [Sfn.from_string(explode_at(sfn_str, index)), true]
-  end
-end
-
-def explode_at(sfn_str, index)
-  before = sfn_str[0..index - 1].chars
-  ending = index + sfn_str[index..].index("]")
-  pair = sfn_str[index + 1..ending - 1].split(",")
-  after = sfn_str[ending + 1..].chars
-  rbindex = first_number(before.reverse)
-  if !rbindex[0].nil?
-    bindex = before.length - 1 - rbindex[0] - (rbindex[1] - 1)
-    old_left_num = Integer(before[bindex, rbindex[1]].join(""))
-    new_left_num = Integer(pair[0]) + old_left_num
-    before = before.join("").reverse.sub(old_left_num.to_s.reverse, new_left_num.to_s.reverse).reverse
-  else
-    before = before.join("")
-  end
-  aindex = first_number(after)
-  if !aindex[0].nil?
-    old_right_num = Integer(after[*aindex].join(""))
-    new_right_num = Integer(pair[1]) + old_right_num
-    after = after.join("").sub(old_right_num.to_s, new_right_num.to_s)
-  else
-    after = after.join("")
-  end
-  before + "0" + after
-end
-
-# takes array of strings and returns index of first numeric char
-def first_number(array)
-  numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-  start_index = nil
-  array.each_with_index do |x, i|
-    if numbers.include?(x)
-      start_index = i
-      break
-    end
-  end
-  length = nil
-  array[start_index..].each_with_index do |x, i|
-    if !numbers.include?(x)
-      length = i
-      break
-    end
-  end
-  [start_index, length]
-end
-
-# somewhat complex in order to handle multi-digit numbers
-def get_value_from_stack(stack)
-  ones = stack.pop
-  if ones.instance_of?(Array)
-    ones
-  else
-    nums = [ones]
-    multiplier = 10
-    loop do
-      if stack[-1].instance_of?(Integer)
-        nums << multiplier * stack.pop
-        multiplier *= 10
-      else
-        break
-      end
-    end
-    nums.sum
-  end
 end
 
 def new_split_values(n)
@@ -203,15 +124,65 @@ def new_split_values(n)
   end
 end
 
+def explode(sfn)
+  sfn_tokens = sfn.to_token_array
+  depth = 0
+  index = nil
+  sfn_tokens.each_with_index do |token, i|
+    if token == "["
+      depth += 1
+    elsif token == "]"
+      depth -= 1
+    end
+    if depth == 5
+      index = i
+      break
+    end
+  end
+  if index.nil?
+    [sfn, false]
+  else
+    [Sfn.from_token_array(explode_at(sfn_tokens, index)), true]
+  end
+end
+
+def explode_at(sfn_tokens, index)
+  before = sfn_tokens[0..index - 1]
+  ending = index + sfn_tokens[index..].index("]")
+  pair = sfn_tokens[index + 1..ending - 1]
+  after = sfn_tokens[ending + 1..]
+
+  new_before = increment_first_integer(before.reverse, pair[0]).reverse
+  new_after = increment_first_integer(after, pair[1])
+  new_before + [0] + new_after
+end
+
+# Increments the first integer found in the array
+def increment_first_integer(array, increment)
+  index = first_number(array)
+  if !index.nil?
+    old_num = Integer(array[index])
+    new_num = increment + old_num
+    array[index] = new_num
+  end
+  array
+end
+
+# Returns the index of the first integer in the array
+def first_number(array)
+  array.each_with_index do |x, i|
+    return i if x.instance_of?(Integer)
+  end
+  nil
+end
+
+# apply the reduce rules
 def reduce_sfn(sfn)
   loop do
     result = explode(sfn)
-    if result[1] == true
-      # print " exploded to #{sfn}", "\n"
-    else
+    if result[1] == false # if we didn't explode
       result = sfn.split
       break unless result[1] == true
-      # print " split to    #{sfn}", "\n"
     end
     sfn = result[0]
   end
@@ -219,21 +190,18 @@ def reduce_sfn(sfn)
 end
 
 def part1(input)
-  input[1..].reduce(Sfn.from_string(input[0])) do |state, x|
-    new_state = state.add(x)
-    # print "New State: #{new_state} \n"
-    new_state
-  end.magnitude
+  initial = Sfn.from_string(input[0])
+  input[1..].reduce(initial) { |state, x| state.add(x) }.magnitude
 end
 
 def part2(input)
   max = 0
   input.each_with_index do |a, i|
-    print " -- #{i}\n"
+    print " -- #{i}\n" if i % 5 == 0
     input.each do |b|
       if a != b
         result = Sfn.from_string(a).add(b).magnitude
-        max = max >= result ? max : result
+        max = result >= max ? result : max
       end
     end
   end
